@@ -231,17 +231,18 @@
     async function submitVote(optionKey) {
       setButtonsDisabled(true);
       showStatus("투표를 반영하는 중...");
-
+    
       try {
-        // GAS 웹앱은 리다이렉트(302)를 거치므로 fetch 사용 시 자동으로 추적됩니다.
         const res = await fetch(GAS_URL, {
           method: "POST",
           headers: {
-            "Content-Type": "text/plain;charset=utf-8" // GAS 단순 요청 CORS 호환을 위해 text/plain 권장
+            // GAS는 simple request 형태(text/plain)로 전달해야 CORS 사전검사(OPTIONS)를 우회합니다.
+            "Content-Type": "text/plain;charset=utf-8"
           },
-          body: JSON.stringify({ option: optionKey })
+          body: JSON.stringify({ option: optionKey }),
+          redirect: "follow" // GAS 웹앱의 302 리다이렉트를 확실히 추적하도록 명시
         });
-
+    
         const data = await res.json();
         if (data.status === "success") {
           updateChart(data.votes || {});
@@ -250,8 +251,8 @@
           showStatus("투표 실패: " + data.message);
         }
       } catch (err) {
-        showStatus("투표 처리 중 오류가 발생했습니다.");
-        console.error(err);
+        console.error("상세 에러 내역:", err); // 브라우저 F12 콘솔에서 구체적인 에러 확인 가능
+        showStatus("투표 처리 중 오류가 발생했습니다. (F12 콘솔 확인)");
       } finally {
         setButtonsDisabled(false);
       }
