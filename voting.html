@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>실시간 투표 현황</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .poll-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 520px;
+      padding: 32px;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 24px;
+    }
+
+    .options-group {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .vote-btn {
+      flex: 1;
+      padding: 14px 18px;
+      font-size: 1rem;
+      font-weight: 600;
+      border: 2px solid var(--border);
+      background: #fff;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .vote-btn:hover:not(:disabled) {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: #f5f3ff;
+    }
+
+    .vote-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .results-section {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+
+    .results-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .total-count {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: normal;
+    }
+
+    .bar-item {
+      margin-bottom: 16px;
+    }
+
+    .bar-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .bar-stats {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .progress-track {
+      background-color: #e2e8f0;
+      border-radius: 9999px;
+      height: 14px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background-color: var(--primary);
+      border-radius: 9999px;
+      width: 0%;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* 옵션별 막대 색상 */
+    .bar-item[data-option="optionA"] .progress-bar { background-color: #3b82f6; }
+    .bar-item[data-option="optionB"] .progress-bar { background-color: #10b981; }
+    .bar-item[data-option="optionC"] .progress-bar { background-color: #f59e0b; }
+
+    .status-msg {
+      margin-top: 16px;
+      font-size: 0.85rem;
+      text-align: center;
+      color: var(--text-muted);
+      min-height: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="poll-card">
+    <h2>항목 투표하기</h2>
+    <p class="subtitle">마음에 드는 옵션을 클릭하여 투표해 주세요.</p>
+
+    <!-- 투표 버튼 -->
+    <div class="options-group">
+      <button class="vote-btn" onclick="submitVote('optionA')">A안 투표</button>
+      <button class="vote-btn" onclick="submitVote('optionB')">B안 투표</button>
+      <button class="vote-btn" onclick="submitVote('optionC')">C안 투표</button>
+    </div>
+
+    <!-- 결과 막대그래프 -->
+    <div class="results-section">
+      <div class="results-title">
+        <span>현재 득표 현황</span>
+        <span class="total-count" id="totalCountLabel">총 투표수: 0표</span>
+      </div>
+
+      <div class="bar-item" data-option="optionA">
+        <div class="bar-header">
+          <span>A안</span>
+          <span class="bar-stats" id="stats-optionA">0표 (0%)</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="bar-optionA"></div>
+        </div>
+      </div>
+
+      <div class="bar-item" data-option="optionB">
+        <div class="bar-header">
+          <span>B안</span>
+          <span class="bar-stats" id="stats-optionB">0표 (0%)</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="bar-optionB"></div>
+        </div>
+      </div>
+
+      <div class="bar-item" data-option="optionC">
+        <div class="bar-header">
+          <span>C안</span>
+          <span class="bar-stats" id="stats-optionC">0표 (0%)</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar" id="bar-optionC"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-msg" id="statusMsg"></div>
+  </div>
+
+  <script>
+    // [설정] 본인이 배포한 GAS 웹 앱 URL 입력
+    const GAS_URL = "https://script.google.com/macros/s/1JoOYRFh4Vj7JPp_wKnRJ8bV9nOHD-sHuBHGfEb4NrIvFdv8ZJF_rkPlU/exec";
+
+    const options = ["optionA", "optionB", "optionC"];
+
+    // 1. 초기 렌더링 시 전체 결과 GET
+    async function loadResults() {
+      showStatus("최신 투표 데이터를 불러오는 중...");
+      try {
+        const res = await fetch(GAS_URL);
+        const data = await res.json();
+        if (data.status === "success") {
+          updateChart(data.votes || {});
+          showStatus("");
+        } else {
+          showStatus("데이터 조회 실패: " + data.message);
+        }
+      } catch (err) {
+        showStatus("통신 오류가 발생했습니다.");
+        console.error(err);
+      }
+    }
+
+    // 2. 투표 전송 (POST)
+    async function submitVote(optionKey) {
+      setButtonsDisabled(true);
+      showStatus("투표를 반영하는 중...");
+
+      try {
+        // GAS 웹앱은 리다이렉트(302)를 거치므로 fetch 사용 시 자동으로 추적됩니다.
+        const res = await fetch(GAS_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8" // GAS 단순 요청 CORS 호환을 위해 text/plain 권장
+          },
+          body: JSON.stringify({ option: optionKey })
+        });
+
+        const data = await res.json();
+        if (data.status === "success") {
+          updateChart(data.votes || {});
+          showStatus("성공적으로 투표되었습니다!");
+        } else {
+          showStatus("투표 실패: " + data.message);
+        }
+      } catch (err) {
+        showStatus("투표 처리 중 오류가 발생했습니다.");
+        console.error(err);
+      } finally {
+        setButtonsDisabled(false);
+      }
+    }
+
+    // 3. 백분율 계산 및 CSS 막대그래프 업데이트
+    function updateChart(votes) {
+      let total = 0;
+      options.forEach(opt => {
+        total += (votes[opt] || 0);
+      });
+
+      document.getElementById("totalCountLabel").textContent = `총 투표수: ${total}표`;
+
+      options.forEach(opt => {
+        const count = votes[opt] || 0;
+        const percentage = total === 0 ? 0 : Math.round((count / total) * 100);
+
+        // 막대 너비 업데이트
+        const barElem = document.getElementById(`bar-${opt}`);
+        if (barElem) {
+          barElem.style.width = `${percentage}%`;
+        }
+
+        // 텍스트 라벨 업데이트
+        const statsElem = document.getElementById(`stats-${opt}`);
+        if (statsElem) {
+          statsElem.textContent = `${count}표 (${percentage}%)`;
+        }
+      });
+    }
+
+    function setButtonsDisabled(disabled) {
+      document.querySelectorAll(".vote-btn").forEach(btn => btn.disabled = disabled);
+    }
+
+    function showStatus(msg) {
+      document.getElementById("statusMsg").textContent = msg;
+    }
+
+    // 페이지 시작 시 데이터 로드
+    window.onload = loadResults;
+  </script>
+</body>
+</html>
