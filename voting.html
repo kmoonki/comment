@@ -205,7 +205,7 @@
 
   <script>
     // [설정] 본인이 배포한 GAS 웹 앱 URL 입력
-    const GAS_URL = "https://script.google.com/macros/s/1JoOYRFh4Vj7JPp_wKnRJ8bV9nOHD-sHuBHGfEb4NrIvFdv8ZJF_rkPlU/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbzbdUzunJSXw_jQUkpTO16ZyATo2yU_IGTcvQtqx3jdhs-uHR6YcvHYp5Az_YDhXPo/exec";
 
     const options = ["optionA", "optionB", "optionC"];
 
@@ -233,17 +233,11 @@
       showStatus("투표를 반영하는 중...");
     
       try {
-        const res = await fetch(GAS_URL, {
-          method: "POST",
-          headers: {
-            // GAS는 simple request 형태(text/plain)로 전달해야 CORS 사전검사(OPTIONS)를 우회합니다.
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: JSON.stringify({ option: optionKey }),
-          redirect: "follow" // GAS 웹앱의 302 리다이렉트를 확실히 추적하도록 명시
-        });
-    
+        // GET 쿼리스트링으로 전송하여 CORS POST 리다이렉트 충돌 방지
+        const targetUrl = `${GAS_URL}?action=vote&option=${encodeURIComponent(optionKey)}`;
+        const res = await fetch(targetUrl);
         const data = await res.json();
+    
         if (data.status === "success") {
           updateChart(data.votes || {});
           showStatus("성공적으로 투표되었습니다!");
@@ -251,8 +245,8 @@
           showStatus("투표 실패: " + data.message);
         }
       } catch (err) {
-        console.error("상세 에러 내역:", err); // 브라우저 F12 콘솔에서 구체적인 에러 확인 가능
-        showStatus("투표 처리 중 오류가 발생했습니다. (F12 콘솔 확인)");
+        console.error("에러 상세:", err);
+        showStatus("투표 처리 중 오류가 발생했습니다.");
       } finally {
         setButtonsDisabled(false);
       }
