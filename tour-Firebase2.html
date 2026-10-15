@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>대한민국 구석구석 관광 탐색기</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --heart: #ef4444;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    h1 { font-size: 1.25rem; font-weight: 700; }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    select, button {
+      font-size: 0.95rem;
+      padding: 0.5rem 0.85rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      outline: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    select:focus { border-color: var(--primary); }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    .btn-toggle {
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .btn-toggle.active {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+
+    .view-header {
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* 카드 그리드 */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+      transition: transform 0.2s, box-shadow 0.2s;
+      position: relative;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+    }
+
+    .card-thumb {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background-color: #cbd5e1;
+    }
+
+    .card-body {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      line-height: 1.35;
+      word-break: keep-all;
+    }
+
+    .card-addr {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .btn-fav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.45rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: #fff;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-fav.active {
+      border-color: var(--heart);
+      color: var(--heart);
+      background: #fff1f2;
+    }
+
+    .status-msg {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+      font-size: 1rem;
+      grid-column: 1 / -1;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-container">
+      <h1>🚩 방방곡곡 관광 투어</h1>
+      <div class="nav-actions">
+        <select id="areaSelect">
+          <option value="1">서울</option>
+          <option value="6">부산</option>
+          <option value="4">대구</option>
+          <option value="2">인천</option>
+          <option value="5">광주</option>
+          <option value="3">대전</option>
+          <option value="7">울산</option>
+          <option value="8">세종</option>
+          <option value="31">경기도</option>
+          <option value="32">강원도</option>
+          <option value="39">제주도</option>
+        </select>
+        <button id="searchBtn" class="btn-primary">조회</button>
+        <button id="toggleFavoritesBtn" class="btn-toggle">내 보관함 보기 (0)</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="viewTitle" class="view-header">서울 지역 관광지 목록</div>
+    <div id="cardGrid" class="grid">
+      <div class="status-msg">관광지 정보를 불러오는 중입니다...</div>
+    </div>
+  </main>
+
+  <!-- Firebase v10 CDN (ES Modules) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
+    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+
+    // ------------------------------------------------------------------------
+    // [설정 영역] 아래 두 설정 항목에 실제 발급받은 키 정보를 입력하세요.
+    // ------------------------------------------------------------------------
+    const TOUR_API_KEY = "Dpva6vJJ1NWDNGeibLpRCDAGFK8SpHKi+Xz0cYf5UbV88z1wfNpKdrRYDUVfR/CTgZ3K3zPzGLLQJcifSI/CLg=="; // 공공데이터포털 디코딩 일반 인증키
+    const firebaseConfig = {
+      apiKey: "AIzaSyDzRWHVCzXMFJuR1eUgwr3Hfe8eT7-u2vI",
+      authDomain: "my-web-app-a2aa7.firebaseapp.com",
+      //databaseURL: "https://my-web-app-a2aa7-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "my-web-app-a2aa7",
+      storageBucket: "my-web-app-a2aa7.firebasestorage.app",
+      messagingSenderId: "84408759123",
+      appId: "1:84408759123:web:699a3e0c197627b7dba7a6"
+    };
+
+    // Firebase 초기화
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // 전역 상태
+    let currentUser = null;
+    let favoriteMap = new Map(); // key: contentid, value: item 데이터
+    let currentTourList = [];    // 현재 API로 불러온 관광지 배열
+    let isShowingFavorites = false; // 현재 화면이 보관함인지 여부
+
+    const areaSelect = document.getElementById("areaSelect");
+    const searchBtn = document.getElementById("searchBtn");
+    const toggleFavoritesBtn = document.getElementById("toggleFavoritesBtn");
+    const cardGrid = document.getElementById("cardGrid");
+    const viewTitle = document.getElementById("viewTitle");
+
+    // 기본 대체 이미지 (이미지가 제공되지 않는 관광지용)
+    const PLACEHOLDER_IMG = "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=500&auto=format&fit=crop&q=60";
+
+    // 1. Firebase 익명 로그인 및 실시간 동기화
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUser = user;
+        listenToFavorites(user.uid);
+      } else {
+        signInAnonymously(auth).catch((err) => {
+          console.error("Firebase 익명 로그인 실패:", err);
+        });
+      }
+    });
+
+    // Firestore 찜 목록 구독 (실시간 반영)
+    function listenToFavorites(uid) {
+      const favColRef = collection(db, "users", uid, "favorites");
+      onSnapshot(favColRef, (snapshot) => {
+        favoriteMap.clear();
+        snapshot.forEach((docSnap) => {
+          favoriteMap.set(docSnap.id, docSnap.data());
+        });
+
+        // 보관함 버튼 카운트 갱신
+        toggleFavoritesBtn.textContent = `내 보관함 보기 (${favoriteMap.size})`;
+
+        // 보관함 화면이 열려있거나 일반 화면일 때 재렌더링
+        if (isShowingFavorites) {
+          renderCards(Array.from(favoriteMap.values()));
+        } else {
+          renderCards(currentTourList);
+        }
+      });
+    }
+
+    // 2. 한국관광공사 TourAPI 지역기반 관광정보 조회
+    async function fetchTourData(areaCode) {
+      isShowingFavorites = false;
+      toggleFavoritesBtn.classList.remove("active");
+      const selectedAreaName = areaSelect.options[areaSelect.selectedIndex].text;
+      viewTitle.textContent = `${selectedAreaName} 지역 관광지 목록`;
+      cardGrid.innerHTML = `<div class="status-msg">데이터를 조회하고 있습니다...</div>`;
+
+      const endpoint = "https://apis.data.go.kr/B551011/KorService2/areaBasedList2";
+      const params = new URLSearchParams({
+        serviceKey: TOUR_API_KEY,
+        numOfRows: "20",
+        pageNo: "1",
+        MobileOS: "ETC",
+        MobileApp: "TourApp",
+        _type: "json",
+        arrange: "Q",      // Q: 썸네일 이미지가 있는 콘텐츠 우선 정렬
+        areaCode: areaCode
+      });
+
+      try {
+        const response = await fetch(`${endpoint}?${params.toString()}`);
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        
+        const data = await response.json();
+        const items = data?.response?.body?.items?.item;
+
+        if (!items || items.length === 0) {
+          currentTourList = [];
+          cardGrid.innerHTML = `<div class="status-msg">해당 지역의 관광 정보가 없습니다.</div>`;
+          return;
+        }
+
+        currentTourList = Array.isArray(items) ? items : [items];
+        renderCards(currentTourList);
+      } catch (error) {
+        console.error("API 요청 실패:", error);
+        cardGrid.innerHTML = `<div class="status-msg">데이터를 불러오는 중 오류가 발생했습니다.<br>API 키 또는 네트워크 상태를 확인해주세요.</div>`;
+      }
+    }
+
+    // 3. 카드 뷰 렌더링
+    function renderCards(itemList) {
+      cardGrid.innerHTML = "";
+
+      if (itemList.length === 0) {
+        cardGrid.innerHTML = isShowingFavorites 
+          ? `<div class="status-msg">아직 찜한 관광지가 없습니다. 마음에 드는 여행지를 추가해보세요!</div>`
+          : `<div class="status-msg">조회된 결과가 없습니다.</div>`;
+        return;
+      }
+
+      itemList.forEach((item) => {
+        const isFav = favoriteMap.has(String(item.contentid));
+        const imgSrc = item.firstimage || item.firstimage2 || PLACEHOLDER_IMG;
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <img class="card-thumb" src="${imgSrc}" alt="${item.title}" loading="lazy" onerror="this.src='${PLACEHOLDER_IMG}'" />
+          <div class="card-body">
+            <div>
+              <div class="card-title">${item.title}</div>
+              <div class="card-addr">${item.addr1 || "주소 정보 없음"}</div>
+            </div>
+            <button class="btn-fav ${isFav ? 'active' : ''}" data-id="${item.contentid}">
+              <span>${isFav ? '❤️' : '🤍'}</span>
+              <span>${isFav ? '찜 취소' : '찜하기'}</span>
+            </button>
+          </div>
+        `;
+
+        // 찜 토글 버튼 이벤트
+        const favBtn = card.querySelector(".btn-fav");
+        favBtn.addEventListener("click", () => toggleFavorite(item));
+
+        cardGrid.appendChild(card);
+      });
+    }
+
+    // 4. 찜하기 / 취소 처리 (Firestore CRUD)
+    async function toggleFavorite(item) {
+      if (!currentUser) {
+        alert("인증 세션을 연결하는 중입니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
+
+      const contentId = String(item.contentid);
+      const docRef = doc(db, "users", currentUser.uid, "favorites", contentId);
+
+      try {
+        if (favoriteMap.has(contentId)) {
+          // 이미 찜한 상태 -> 삭제
+          await deleteDoc(docRef);
+        } else {
+          // 찜 추가 -> 저장
+          await setDoc(docRef, {
+            contentid: item.contentid,
+            title: item.title,
+            addr1: item.addr1 || "",
+            firstimage: item.firstimage || item.firstimage2 || "",
+            savedAt: Date.now()
+          });
+        }
+      } catch (err) {
+        console.error("즐겨찾기 반영 오류:", err);
+        alert("즐겨찾기 저장 중 문제가 발생했습니다.");
+      }
+    }
+
+    // 이벤트 리스너 등록
+    searchBtn.addEventListener("click", () => fetchTourData(areaSelect.value));
+
+    toggleFavoritesBtn.addEventListener("click", () => {
+      isShowingFavorites = !isShowingFavorites;
+      if (isShowingFavorites) {
+        toggleFavoritesBtn.classList.add("active");
+        viewTitle.textContent = "내 보관함 (찜한 관광지)";
+        renderCards(Array.from(favoriteMap.values()));
+      } else {
+        toggleFavoritesBtn.classList.remove("active");
+        const selectedAreaName = areaSelect.options[areaSelect.selectedIndex].text;
+        viewTitle.textContent = `${selectedAreaName} 지역 관광지 목록`;
+        renderCards(currentTourList);
+      }
+    });
+
+    // 앱 첫 로드시 서울(1) 데이터 기본 조회
+    fetchTourData("1");
+  </script>
+</body>
+</html>
