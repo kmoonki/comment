@@ -295,10 +295,33 @@
     // 한국관광공사 지역기반 관광정보 조회 API 호출
     async function fetchTourData(areaCode) {
       const numOfRows = 12;
-      const url = `https://apis.data.go.kr/B551011/KorService1/areaBasedList1?serviceKey=${encodeURIComponent(TOUR_API_KEY)}&numOfRows=${numOfRows}&pageNo=1&MobileOS=ETC&MobileApp=TourApp&_type=json&listYN=Y&arrange=O&areaCode=${areaCode}`;
-
+      
+      // 1. 공공데이터포털 마이페이지의 '일반 인증키(Decoding)'를 그대로 넣으세요.
+      //    (만약 안 될 경우 '일반 인증키(Encoding)'를 넣고 2번 주석 참고)
+      const TOUR_API_KEY = "Dpva6vJJ1NWDNGeibLpRCDAGFK8SpHKi+Xz0cYf5UbV88z1wfNpKdrRYDUVfR/CTgZ3K3zPzGLLQJcifSI/CLg==";
+    
+      // 2. URL 구성
+      // ※ arrange는 숫자 0이 아니라 알파벳 대문자 'O' (또는 'A', 'C')입니다.
+      // ※ Decoding 키를 쓸 경우 encodeURIComponent를 적용하고, 
+      //   이미 인코딩된 Encoding 키를 쓸 경우 encodeURIComponent를 빼고 직접 넣어야 합니다.
+      const url = `https://apis.data.go.kr/B551011/KorService1/areaBasedList1` +
+        `?serviceKey=${encodeURIComponent(TOUR_API_KEY)}` +
+        `&numOfRows=${numOfRows}` +
+        `&pageNo=1` +
+        `&MobileOS=ETC` +
+        `&MobileApp=TourApp` +
+        `&_type=json` +
+        `&listYN=Y` +
+        `&arrange=A` +           // <-- 안전하게 알파벳 'A'(제목순) 또는 대문자 'O'로 변경
+        `&areaCode=${areaCode}`;
+    
+      console.log("요청 URL:", url); // 콘솔에서 URL을 직접 클릭해 브라우저 새 창에서 뜨는지 확인
+    
       const response = await fetch(url);
       if (!response.ok) {
+        // 400 에러 발생 시 서버가 반환한 구체적인 에러 메시지 확인
+        const errorText = await response.text();
+        console.error("서버 응답 상세:", errorText);
         throw new Error(`API 응답 오류: ${response.status}`);
       }
       
@@ -307,7 +330,7 @@
       if (!items) return [];
       return Array.isArray(items) ? items : [items];
     }
-
+    
     // 카드 그리드 렌더링
     function renderCards(items, areaName) {
       cardGrid.innerHTML = "";
